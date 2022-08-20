@@ -13,9 +13,9 @@ import vueIcon from "@/img/vue.png";
 const initialItems = [
   { id: 1, src: angularIcon.src, stat: "" },
   { id: 1, src: angularIcon.src, stat: "" },
-  { id: 2, src: cssIcon.src, stat: "correct" },
   { id: 2, src: cssIcon.src, stat: "" },
-  { id: 3, src: vueIcon.src, stat: "wrong" },
+  { id: 2, src: cssIcon.src, stat: "" },
+  { id: 3, src: vueIcon.src, stat: "" },
   { id: 3, src: vueIcon.src, stat: "" },
   { id: 4, src: htmlIcon.src, stat: "" },
   { id: 4, src: htmlIcon.src, stat: "" },
@@ -36,13 +36,65 @@ export default function Game({}) {
     setItems([...items].sort(() => Math.random() - 0.5));
   }, []);
 
+  useEffect(() => {
+    console.log(items.map((item) => item.stat));
+  }, [items]);
+
+  const check = (currentId) => {
+    let newItems;
+    if (items[currentId].src === items[prev].src) {
+      newItems = [...items];
+      newItems[currentId].stat = "correct";
+      newItems[prev].stat = "correct";
+      setItems(newItems);
+      setPrev(-1);
+    } else {
+      newItems = [...items];
+      newItems[currentId].stat = "wrong";
+      newItems[prev].stat = "wrong";
+      setItems(newItems);
+      setTimeout(() => {
+        newItems[prev].stat = "";
+        newItems[currentId].stat = "";
+        setItems(newItems);
+        setPrev(-1);
+      }, 1000);
+    }
+  };
+
+  const hasWrongs = () => {
+    return items.filter((item) => item.stat === "wrong").length === 2;
+  };
+
   const handleClick = (id) => {
-    items[id].stat = "active";
-    setPrev(id);
+    if (items[id].stat !== "") return;
+    if (hasWrongs()) return;
+    let newItems;
+    if (prev === -1) {
+      setPrev(id);
+      newItems = [...items];
+      newItems[id].stat = "active";
+      setItems(newItems);
+    } else {
+      check(id);
+    }
+  };
+
+  const restart = () => {
+    setItems(initialItems);
+  };
+
+  const boardIsFull = () => {
+    return items.every((item) => item.stat !== "");
   };
   return (
     <div className="flex flex-col items-center">
       <h1>this is a memeory game</h1>
+      {boardIsFull() && (
+        <button className="border-2 border-black" onClick={restart}>
+          restart
+        </button>
+      )}
       <Board items={items} handleClick={handleClick} />
     </div>
   );
